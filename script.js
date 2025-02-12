@@ -8,7 +8,7 @@ function formatCurrency(amount) {
         style: 'currency',
         currency: 'INR',
         minimumFractionDigits: 2
-    }).format(amount / 1);
+    }).format(amount / 100);
 }
 
 // Fetch cart data from API
@@ -53,6 +53,7 @@ function renderCart() {
                 <img src="${item.image}" alt="${item.title}" class="product-image">
                 <div>
                     <h3>${item.title}</h3>
+                    
                 </div>
             </div>
             <div>${formatCurrency(item.price)}</div>
@@ -77,53 +78,31 @@ function renderCart() {
     `).join('');
 
     // Update totals
-    updateDOMTotals();
-    console.log("Cart rendered with updated data.");
+    subtotalElement.textContent = formatCurrency(cartData.original_total_price);
+    totalElement.textContent = formatCurrency(cartData.original_total_price);
 }
 
 // Update item quantity
 function updateQuantity(itemId, newQuantity) {
-    console.log("Updating quantity for item:", itemId, "to", newQuantity);
+    if (!cartData) return;
 
-    if (!cartData) {
-        console.error("Cart data is not available.");
-        return;
-    }
-
-    const item = cartData.items.find(item => item.id === parseInt(itemId));
-    if (!item) {
-        console.error("Item not found in cart:", itemId);
-        return;
-    }
+    const item = cartData.items.find(item => item.id === itemId);
+    if (!item) return;
 
     const quantity = parseInt(newQuantity);
-    if (isNaN(quantity) || quantity < 1) {
-        console.error("Invalid quantity:", quantity);
-        return;
-    }
+    if (quantity < 1) return;
 
+    
     item.quantity = quantity;
     item.final_line_price = item.price * quantity;
 
-    recalculateTotal();
-    renderCart();
-}
-
-// Recalculate total price
-function recalculateTotal() {
+    // Recalculate total
     cartData.original_total_price = cartData.items.reduce((sum, item) => sum + item.final_line_price, 0);
-    console.log("Recalculated total price:", cartData.original_total_price);
-    localStorage.setItem('cartData', JSON.stringify(cartData));
-    updateDOMTotals();
-}
 
-// Update DOM with new totals
-function updateDOMTotals() {
-    const subtotalElement = document.getElementById('subtotal');
-    const totalElement = document.getElementById('total');
-    subtotalElement.textContent = formatCurrency(cartData.original_total_price);
-    totalElement.textContent = formatCurrency(cartData.original_total_price);
-    console.log("Updated DOM with new totals.");
+    // Save to localStorage
+    localStorage.setItem('cartData', JSON.stringify(cartData));
+
+    renderCart();
 }
 
 // Show remove confirmation modal
@@ -145,9 +124,11 @@ function confirmRemoveItem() {
     if (itemToRemove === null || !cartData) return;
 
     cartData.items = cartData.items.filter(item => item.id !== itemToRemove);
+    cartData.original_total_price = cartData.items.reduce((sum, item) => sum + item.final_line_price, 0);
 
-    // Recalculate total after item removal
-    recalculateTotal();
+    // Save to localStorage
+    localStorage.setItem('cartData', JSON.stringify(cartData));
+
     renderCart();
     closeModal();
 }
@@ -168,59 +149,3 @@ window.onclick = function(event) {
         closeModal();
     }
 }
-
-function updateQuantity(event) {
-    const input = event.target;
-    const quantity = parseInt(input.value);
-    const itemElement = input.closest('.cart-item');
-    const price = parseFloat(itemElement.dataset.basePrice); // Get raw price from data attribute
-    const subtotalElement = itemElement.querySelector('.item-subtotal');
-    
-    // Calculate new line price
-    const newSubtotal = price * quantity;
-    subtotalElement.textContent = `Subtotal: ₹${newSubtotal.toLocaleString('en-IN')}`;
-    
-    updateCartTotals();
-}
-
-// In item creation code
-items.forEach(item => {
-    const itemElement = document.createElement('div');
-    itemElement.classList.add('cart-item');
-    const basePrice = item.price / 100; // Convert from cents
-    itemElement.dataset.basePrice = basePrice; // Store raw number
-    
-    itemElement.innerHTML = `
-        <img src="${item.image}" alt="${item.title}">
-        <div>
-            <h3>${item.title}</h3>
-            <p>Price: ₹${basePrice.toLocaleString('en-IN')}</p>
-            <input type="number" value="${item.quantity}" min="1">
-            <p class="item-subtotal">Subtotal: ₹${(basePrice * item.quantity).toLocaleString('en-IN')}</p>
-            <button class="remove-item">🗑️</button>
-        </div>
-    `;
-    // ... rest of item creation
-});
-
-function updateCartTotals() {
-    let calculatedTotal = 0;
-    
-    document.querySelectorAll('.cart-item').forEach(item => {
-        const subtotalText = item.querySelector('.item-subtotal').textContent;
-        const subtotal = parseFloat(subtotalText.replace(/[^0-9.]/g, ''));
-        calculatedTotal += subtotal;
-    });
-    
-    subtotalElement.textContent = `₹${calculatedTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-    totalElement.textContent = `₹${calculatedTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const hamburger = document.querySelector('.hamburger');
-    const navLinks = document.querySelector('.nav-links');
-
-    hamburger.addEventListener('click', function() {
-        navLinks.classList.toggle('nav-active');
-    });
-}); 

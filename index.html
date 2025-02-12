@@ -7,15 +7,14 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header class="header">
-        <nav class="nav-container">
+    <header>
+        <nav>
             <div class="logo">
-                <img src="./Logo.png" alt="Logo">
-            </div>
-            <div class="hamburger">
-                <div></div>
-                <div></div>
-                <div></div>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+                    <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+                </svg>
+                <span>Marmeto</span>
             </div>
             <ul class="nav-links">
                 <li><a href="#">Home</a></li>
@@ -46,8 +45,13 @@
     </header>
 
     <main>
-        <div class="page-header" >
-            <img src="Header.png" alt="">
+        <div class="page-header">
+            <h1>Cart</h1>
+            <div class="breadcrumb">
+                <a href="#">Home</a>
+                <span>/</span>
+                <span>Cart</span>
+            </div>
         </div>
 
         <div class="loading-spinner" id="loader">
